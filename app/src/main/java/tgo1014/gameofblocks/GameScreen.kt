@@ -9,30 +9,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import tgo1014.gameofblocks.ui.theme.GameOfBlocksTheme
 
+@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun GameScreen() {
-    val coroutineScope = rememberCoroutineScope()
-    val game = remember { Game(gameScope = coroutineScope) } // todo state on color change
-    val grid by game.gameGrid.collectAsState() // todo replace with collectAsStateWithLifecycle()
-    Box(modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
-        Grid(
-            grid = grid,
-            onItemClicked = game::onGridTouched,
-            modifier = Modifier.align(Alignment.Center)
-        )
-    }
+    val gameViewModel = viewModel<GameViewModel>()
+    val game = gameViewModel.game
+    val grid by game.gameGrid.collectAsStateWithLifecycle()
+    GameScreen(grid = grid, onItemClicked = gameViewModel::onGridTouched)
 }
 
 @Composable
