@@ -32,23 +32,30 @@ fun GameScreen() {
 }
 
 @Composable
-private fun Grid(
+private fun GameScreen(
     grid: Array<Array<Game.GridItem>>,
-    modifier: Modifier = Modifier,
     onItemClicked: (x: Int, y: Int) -> Unit = { _, _ -> },
-) {
-    Row(modifier = modifier) {
+) = Box(modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
+    Row(modifier = Modifier.align(Alignment.Center)) {
         grid.forEachIndexed { x, gridItems ->
             Column {
                 gridItems.forEachIndexed { y, item ->
+                    val boxColor =
+                        if (!item.painted) Color.Transparent else MaterialTheme.colorScheme.primary
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(50.dp)
                             .border(1.dp, MaterialTheme.colorScheme.onSurface)
-                            .background(if (!item.painted) Color.Transparent else MaterialTheme.colorScheme.primary)
+                            .background(boxColor)
                             .clickable { onItemClicked(x, y) }
                     ) {
-                        Text("${item.points}")
+                        if (item.points > 0) {
+                            Text(
+                                text = "${item.points}",
+                                color = contentColorFor(backgroundColor = boxColor)
+                            )
+                        }
                     }
                 }
             }
@@ -56,9 +63,8 @@ private fun Grid(
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 private fun GameScreenPreview() = GameOfBlocksTheme {
-    GameScreen()
+    GameScreen(arrayOf())
 }
