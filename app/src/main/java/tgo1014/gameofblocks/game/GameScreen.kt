@@ -1,4 +1,4 @@
-package tgo1014.gameofblocks
+package tgo1014.gameofblocks.game
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,11 +24,9 @@ import tgo1014.gameofblocks.ui.theme.GameOfBlocksTheme
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
-fun GameScreen() {
-    val gameViewModel = viewModel<GameViewModel>()
-    val game = gameViewModel.game
-    val grid by game.gameGrid.collectAsStateWithLifecycle()
-    GameScreen(grid = grid, onItemClicked = gameViewModel::onGridTouched)
+fun GameScreen(viewModel: GameViewModel = viewModel()) {
+    val grid by viewModel.game.gameGrid.collectAsStateWithLifecycle()
+    GameScreen(grid = grid, onItemClicked = viewModel::onGridTouched)
 }
 
 @Composable

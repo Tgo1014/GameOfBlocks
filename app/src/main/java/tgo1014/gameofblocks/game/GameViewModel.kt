@@ -1,4 +1,4 @@
-package tgo1014.gameofblocks
+package tgo1014.gameofblocks.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

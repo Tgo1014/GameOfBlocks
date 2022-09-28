@@ -1,6 +1,5 @@
-package tgo1014.gameofblocks
+package tgo1014.gameofblocks.game
 
-import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -10,20 +9,26 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class Game(
-    private val width: Int = 5,
     private val height: Int = 5,
+    private val width: Int = 5,
     private val maxMoves: Int = 10,
     private val gameScope: CoroutineScope,
 ) {
-
-    private val _gameGrid = MutableStateFlow(emptyGrid())
-    val gameGrid = _gameGrid.asStateFlow()
 
     private var isPlayable = true
     private var currentMoves = 0
     private val isGameOver get() = currentMoves >= maxMoves
     private var calculations = 0
     private var movesCounted = 0
+
+    private val _gameGrid = MutableStateFlow(emptyGrid())
+    val gameGrid = _gameGrid.asStateFlow()
+
+    init {
+        require(height > 0)
+        require(width > 0)
+        require(maxMoves > 0)
+    }
 
     fun onGridTouched(x: Int, y: Int) {
         if (isGameOver) {
@@ -90,7 +95,6 @@ class Game(
         if (x < 0 || y < 0) return
         if (scoreCalculatedCache.contains("$x;$y")) return
         calculations += 1
-        Log.e("GAME", calculations.toString())
         if (_gameGrid.value[x][y].painted) {
             val yUnder = y + 1
             _gameGrid.update { grid ->
@@ -127,14 +131,6 @@ class Game(
     }
 
     private fun emptyGrid() = Array(height) { Array(width) { GridItem() } }
-
-    data class GameState(
-        val movesLeft: Int
-    )
-
-    enum class State {
-        PLAYING, GAME_ENDED
-    }
 
     data class GridItem(val painted: Boolean = false, val points: Int = 0)
 
