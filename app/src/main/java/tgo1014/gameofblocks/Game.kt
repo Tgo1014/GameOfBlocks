@@ -1,5 +1,6 @@
 package tgo1014.gameofblocks
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -21,6 +22,8 @@ class Game(
     private var isPlayable = true
     private var currentMoves = 0
     private val isGameOver get() = currentMoves >= maxMoves
+    private var calculations = 0
+    private var movesCounted = 0
 
     fun onGridTouched(x: Int, y: Int) {
         if (isGameOver) {
@@ -73,18 +76,21 @@ class Game(
 
     private fun checkGameOver() {
         if (!isGameOver) return
+        calculations = 0
+        movesCounted = 0
         calculateScore()
     }
 
     private fun calculateScore(
         x: Int = height - 1,
         y: Int = width - 1,
-        movesCounted: Int = 0,
+        scoreCalculatedCache: MutableList<String> = mutableListOf(),
     ) {
         if (movesCounted == maxMoves) return
         if (x < 0 || y < 0) return
-        if (_gameGrid.value[x][y].points > 0) return
-        var countedMoves = movesCounted
+        if (scoreCalculatedCache.contains("$x;$y")) return
+        calculations += 1
+        Log.e("GAME", calculations.toString())
         if (_gameGrid.value[x][y].painted) {
             val yUnder = y + 1
             _gameGrid.update { grid ->
@@ -97,7 +103,7 @@ class Game(
                 )
                 grid.copyOf()
             }
-            countedMoves += 1
+            movesCounted += 1
         } else {
             // Check if there's a block on top of the space
             for (spaceY in y - 1 downTo 0) {
@@ -110,8 +116,9 @@ class Game(
                 }
             }
         }
-        calculateScore(x - 1, y, countedMoves)
-        calculateScore(x, y - 1, countedMoves)
+        scoreCalculatedCache.add("$x;$y")
+        calculateScore(x - 1, y, scoreCalculatedCache)
+        calculateScore(x, y - 1, scoreCalculatedCache)
     }
 
     private fun reset() {
