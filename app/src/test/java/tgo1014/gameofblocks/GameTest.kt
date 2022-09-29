@@ -2,10 +2,8 @@ package tgo1014.gameofblocks
 
 import app.cash.turbine.testIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Test
 import tgo1014.gameofblocks.game.Game
 
@@ -68,6 +66,38 @@ class GameTest {
             grid = gameState.awaitItem().grid
             assert(!grid[0][1].painted)
             assert(!grid[1][1].painted)
+            gameState.cancel()
+        }
+    }
+
+    @Test
+    fun `GIVEN game started WHEN all moves done THEN score is calculated`() {
+        runTest {
+            val game = Game(height = 2, width = 2, maxMoves = 2, gameScope = backgroundScope)
+            val gameState = game.gameStateFlow.testIn(this)
+            game.onGridTouched(0, 1)
+            game.onGridTouched(1, 1)
+            runCurrent()
+            val score = gameState.expectMostRecentItem().finalScore
+            assert(score > 0)
+            gameState.cancel()
+        }
+    }
+
+    @Test
+    fun `GIVEN is finished WHEN new move done THEN score is reset`() {
+        runTest {
+            val game = Game(height = 2, width = 2, maxMoves = 2, gameScope = backgroundScope)
+            val gameState = game.gameStateFlow.testIn(this)
+            game.onGridTouched(0, 1)
+            game.onGridTouched(1, 1)
+            runCurrent()
+            var score = gameState.expectMostRecentItem().finalScore
+            assert(score > 0)
+            game.onGridTouched(0, 1)
+            runCurrent()
+            score = gameState.expectMostRecentItem().finalScore
+            assert(score == 0)
             gameState.cancel()
         }
     }
