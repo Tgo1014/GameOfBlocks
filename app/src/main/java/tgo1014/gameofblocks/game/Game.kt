@@ -4,7 +4,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,7 +26,11 @@ class Game(
     private var movesCounted = 0
 
     private val _gameGrid = MutableStateFlow(emptyGrid())
-    val gameGrid = _gameGrid.asStateFlow()
+
+    val gameState = _gameGrid.map {
+        val points = it.flatMap { it.map { it.points } }
+        GameState(it, points.sum())
+    }.stateIn(gameScope, SharingStarted.WhileSubscribed(5_000), GameState())
 
     init {
         require(height > 0)
@@ -133,5 +141,10 @@ class Game(
     private fun emptyGrid() = Array(height) { Array(width) { GridItem() } }
 
     data class GridItem(val painted: Boolean = false, val points: Int = 0)
+
+    data class GameState(
+        val grid: Array<Array<GridItem>> = emptyArray(),
+        val finalScore: Int = 0
+    )
 
 }
