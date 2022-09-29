@@ -6,7 +6,7 @@
 
 A simple game of blocks
 
-## 👁️Previews
+## 👁️ Preview
 <p align="center">    
 <img src="imgs/home.png" width="40%"/>    
 </p>  
