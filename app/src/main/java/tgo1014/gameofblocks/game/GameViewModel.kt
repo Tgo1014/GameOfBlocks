@@ -5,6 +5,6 @@ import androidx.lifecycle.viewModelScope
 
 class GameViewModel : ViewModel() {
     private val game = Game(gameScope = viewModelScope)
-    val gameState = game.gameState
+    val gameStateFlow = game.gameStateFlow
     fun onGridTouched(x: Int, y: Int) = game.onGridTouched(x, y)
 }

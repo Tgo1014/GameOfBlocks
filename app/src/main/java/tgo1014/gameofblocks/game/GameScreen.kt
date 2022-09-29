@@ -28,7 +28,7 @@ import tgo1014.gameofblocks.ui.theme.GameOfBlocksTheme
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun GameScreen(viewModel: GameViewModel = viewModel()) {
-    val gameState by viewModel.gameState.collectAsStateWithLifecycle()
+    val gameState by viewModel.gameStateFlow.collectAsStateWithLifecycle()
     GameScreen(
         grid = gameState.grid,
         score = gameState.finalScore,

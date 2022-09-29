@@ -5,8 +5,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -25,12 +23,16 @@ class Game(
     private var calculations = 0
     private var movesCounted = 0
 
-    private val _gameGrid = MutableStateFlow(emptyGrid())
+    private val gameGridFlow = MutableStateFlow(emptyGrid())
 
-    val gameState = _gameGrid.map {
+    val gameStateFlow = gameGridFlow.map {
         val points = it.flatMap { it.map { it.points } }
-        GameState(it, points.sum())
-    }.stateIn(gameScope, SharingStarted.WhileSubscribed(5_000), GameState())
+        GameState(grid = it, finalScore = points.sum())
+    }.stateIn(
+        scope = gameScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = GameState(emptyGrid())
+    )
 
     init {
         require(height > 0)
@@ -43,13 +45,13 @@ class Game(
             reset()
             return
         }
-        if (!isPlayable || _gameGrid.value[x][y].painted) {
+        if (!isPlayable || gameGridFlow.value[x][y].painted) {
             return
         }
         gameScope.launch {
             isPlayable = false
             currentMoves += 1
-            _gameGrid.update { grid ->
+            gameGridFlow.update { grid ->
                 grid[x][y] = grid[x][y].copy(painted = true)
                 grid.copyOf()
             }
@@ -66,7 +68,7 @@ class Game(
                 return@async
             }
             val yBellow = y + 1
-            val gameGrid = _gameGrid.value
+            val gameGrid = gameGridFlow.value
             // top of another block
             if (gameGrid[x][yBellow].painted) {
                 return@async
@@ -77,7 +79,7 @@ class Game(
             ) {
                 return@async
             }
-            _gameGrid.update { grid ->
+            gameGridFlow.update { grid ->
                 grid[x][y] = grid[x][y].copy(painted = false)
                 grid[x][yBellow] = grid[x][y].copy(painted = true)
                 grid.copyOf()
@@ -103,9 +105,9 @@ class Game(
         if (x < 0 || y < 0) return
         if (scoreCalculatedCache.contains("$x;$y")) return
         calculations += 1
-        if (_gameGrid.value[x][y].painted) {
+        if (gameGridFlow.value[x][y].painted) {
             val yUnder = y + 1
-            _gameGrid.update { grid ->
+            gameGridFlow.update { grid ->
                 grid[x][y] = grid[x][y].copy(
                     points = if (grid[x].getOrNull(yUnder)?.painted == false) {
                         5
@@ -119,8 +121,8 @@ class Game(
         } else {
             // Check if there's a block on top of the space
             for (spaceY in y - 1 downTo 0) {
-                if (_gameGrid.value[x][spaceY].painted) {
-                    _gameGrid.update { grid ->
+                if (gameGridFlow.value[x][spaceY].painted) {
+                    gameGridFlow.update { grid ->
                         grid[x][y] = grid[x][y].copy(points = 10)
                         grid.copyOf()
                     }
@@ -135,7 +137,7 @@ class Game(
 
     private fun reset() {
         currentMoves = 0
-        _gameGrid.update { emptyGrid() }
+        gameGridFlow.update { emptyGrid() }
     }
 
     private fun emptyGrid() = Array(height) { Array(width) { GridItem() } }
@@ -143,7 +145,7 @@ class Game(
     data class GridItem(val painted: Boolean = false, val points: Int = 0)
 
     data class GameState(
-        val grid: Array<Array<GridItem>> = emptyArray(),
+        val grid: Array<Array<GridItem>>,
         val finalScore: Int = 0
     )
 
